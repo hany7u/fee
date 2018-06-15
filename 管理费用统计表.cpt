@@ -15,25 +15,29 @@
 <![CDATA[ecomtest]]></DatabaseName>
 </Connection>
 <Query>
-<![CDATA[select * from 
+<![CDATA[select t1.年度,t1.月份,t1.科目编码,t1.科目名称,t1.金额,t1.费用类别 from 
 (SELECT 
        b.yearv||'年' 年度,
        b.periodv||'月' 月份,
        substr(c.code, 1, 6) 科目编码,
-	t.科目名称 科目名称,      
+  t.科目名称 科目名称,   
+  t.费用类别,   
        sum(b.localdebitamount) 金额
+       
 FROM gl_detail b
 left join bd_accasoa ac on b.pk_accasoa = ac.pk_accasoa
 left join bd_account c on ac.pk_account = c.pk_account
-left join (SELECT c.code 科目编码,ac.name 科目名称
-       
-		FROM bd_accasoa ac 
-		left join bd_account c on ac.pk_account = c.pk_account
-		where substr(c.code,1,2) = '66')t on substr(c.code, 1, 6) = t.科目编码
+left join (SELECT c.code 科目编码,ac.name 科目名称,
+    decode(substr(c.code, 1, 4),'6601','销售费用','6602','管理费用','6603','财务费用') 费用类别       
+    FROM bd_accasoa ac 
+    left join bd_account c on ac.pk_account = c.pk_account
+    where substr(c.code,1,2) = '66')t on substr(c.code, 1, 6) = t.科目编码
 
-WHERE b.dr = 0 and c.code like '66%'  and b.periodv <> '00' and b.yearv = '${年度}'
-group by b.yearv,b.periodv,substr(c.code, 1, 6),t.科目名称
-order by b.yearv,b.periodv,substr(c.code, 1, 6))
+WHERE b.dr = 0 and c.code like '66%'  and b.periodv <> '00' 
+${if(len(年度) == 0,"and 1 = 1","and b.yearv = '" + 年度 + "'")}
+group by b.yearv,b.periodv,substr(c.code, 1, 6),t.科目名称,t.费用类别
+)t1
+order by t1.科目编码
 ]]></Query>
 </TableData>
 <TableData name="ds2" class="com.fr.data.impl.DBTableData">
@@ -49,33 +53,44 @@ order by b.yearv,b.periodv,substr(c.code, 1, 6))
 FROM gl_detail b
 order by b.yearv desc]]></Query>
 </TableData>
+<TableData name="ds3" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[ecomtest]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[select distinct decode(substr(c.code, 1, 4),'6601','销售费用','6602','管理费用','6603','财务费用') 费用类别 from bd_account c]]></Query>
+</TableData>
 </TableDataMap>
 <Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
 <ReportPageAttr>
-<HR/>
+<HR F="0" T="2"/>
 <FR/>
-<HC/>
+<HC F="0" T="3"/>
 <FC/>
+<UPFCR COLUMN="true" ROW="true"/>
 </ReportPageAttr>
 <ColumnPrivilegeControl/>
 <RowPrivilegeControl/>
 <RowHeight defaultValue="723900">
-<![CDATA[723900,723900,723900,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
+<![CDATA[723900,1440000,1440000,723900,723900,723900,723900,723900,723900,723900,723900]]></RowHeight>
 <ColumnWidth defaultValue="2743200">
-<![CDATA[2743200,2743200,4876800,3771900,2743200,2743200,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
+<![CDATA[800100,2171700,1981200,4762500,3505200,2743200,2743200,2743200,2743200,2743200,2743200]]></ColumnWidth>
 <CellElementList>
 <C c="0" r="0">
 <PrivilegeControl/>
 <Expand/>
 </C>
-<C c="1" r="1" cs="2" rs="2" s="0">
+<C c="1" r="1" cs="3" rs="2" s="0">
 <O t="BiasTextPainter">
 <IsBackSlash value="false"/>
 <![CDATA[期间|金额|科目]]></O>
 <PrivilegeControl/>
 <Expand/>
 </C>
-<C c="3" r="1" s="1">
+<C c="4" r="1" s="1">
 <O t="DSColumn">
 <Attributes dsName="ds1" columnName="年度"/>
 <Complex/>
@@ -85,7 +100,7 @@ order by b.yearv desc]]></Query>
 <PrivilegeControl/>
 <Expand dir="1"/>
 </C>
-<C c="3" r="2" s="1">
+<C c="4" r="2" s="2">
 <O t="DSColumn">
 <Attributes dsName="ds1" columnName="月份"/>
 <Complex/>
@@ -95,7 +110,17 @@ order by b.yearv desc]]></Query>
 <PrivilegeControl/>
 <Expand dir="1"/>
 </C>
-<C c="1" r="3" s="2">
+<C c="1" r="3" s="3">
+<O t="DSColumn">
+<Attributes dsName="ds1" columnName="费用类别"/>
+<Complex/>
+<RG class="com.fr.report.cell.cellattr.core.group.FunctionGrouper"/>
+<Parameters/>
+</O>
+<PrivilegeControl/>
+<Expand dir="0"/>
+</C>
+<C c="2" r="3" s="3">
 <O t="DSColumn">
 <Attributes dsName="ds1" columnName="科目编码"/>
 <Complex/>
@@ -105,7 +130,7 @@ order by b.yearv desc]]></Query>
 <PrivilegeControl/>
 <Expand dir="0"/>
 </C>
-<C c="2" r="3" s="2">
+<C c="3" r="3" s="3">
 <O t="DSColumn">
 <Attributes dsName="ds1" columnName="科目名称"/>
 <Complex/>
@@ -115,7 +140,7 @@ order by b.yearv desc]]></Query>
 <PrivilegeControl/>
 <Expand dir="0"/>
 </C>
-<C c="3" r="3" s="3">
+<C c="4" r="3" s="4">
 <O t="DSColumn">
 <Attributes dsName="ds1" columnName="金额"/>
 <Complex/>
@@ -123,13 +148,26 @@ order by b.yearv desc]]></Query>
 <Parameters/>
 </O>
 <PrivilegeControl/>
-<Expand dir="0"/>
+<Expand dir="0" leftParentDefault="false" left="D4" upParentDefault="false" up="E3"/>
 </C>
 </CellElementList>
 <ReportAttrSet>
 <ReportSettings headerHeight="0" footerHeight="0">
+<FrozenColumnRow columnrow="E4"/>
 <PaperSetting/>
 </ReportSettings>
+<Header reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Header>
+<Footer reportPageType="0">
+<Background name="NullBackground"/>
+<LeftList/>
+<CenterList/>
+<RightList/>
+</Footer>
 </ReportAttrSet>
 <PrivilegeControl/>
 </Report>
@@ -241,7 +279,17 @@ order by b.yearv desc]]></Query>
 </Border>
 </Style>
 <Style horizontal_alignment="0" imageLayout="1">
-<FRFont name="SimSun" style="0" size="72"/>
+<FRFont name="SimSun" style="1" size="80"/>
+<Background name="NullBackground"/>
+<Border>
+<Top style="1"/>
+<Bottom style="1"/>
+<Left style="1"/>
+<Right style="1"/>
+</Border>
+</Style>
+<Style horizontal_alignment="0" imageLayout="1">
+<FRFont name="SimSun" style="1" size="72"/>
 <Background name="NullBackground"/>
 <Border>
 <Top style="1"/>
