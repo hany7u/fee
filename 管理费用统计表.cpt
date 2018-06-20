@@ -4,9 +4,14 @@
 <TableData name="ds1" class="com.fr.data.impl.DBTableData">
 <Parameters>
 <Parameter>
+<Attributes name="公司"/>
+<O>
+<![CDATA[]]></O>
+</Parameter>
+<Parameter>
 <Attributes name="年度"/>
 <O>
-<![CDATA[2018]]></O>
+<![CDATA[]]></O>
 </Parameter>
 </Parameters>
 <Attributes maxMemRowCount="-1"/>
@@ -15,8 +20,9 @@
 <![CDATA[ecomtest]]></DatabaseName>
 </Connection>
 <Query>
-<![CDATA[select t1.年度,t1.月份,t1.科目编码,t1.科目名称,t1.金额,t1.费用类别 from 
-(SELECT 
+<![CDATA[select t1.公司,t1.年度,t1.月份,t1.科目编码,t1.科目名称,t1.金额,t1.费用类别 from 
+(SELECT
+       orgs.name 公司, 
        b.yearv||'年' 年度,
        b.periodv||'月' 月份,
        substr(c.code, 1, 6) 科目编码,
@@ -27,6 +33,7 @@
 FROM gl_detail b
 left join bd_accasoa ac on b.pk_accasoa = ac.pk_accasoa
 left join bd_account c on ac.pk_account = c.pk_account
+left join org_orgs orgs on b.pk_org = orgs.pk_org
 left join (SELECT c.code 科目编码,ac.name 科目名称,
     decode(substr(c.code, 1, 4),'6601','销售费用','6602','管理费用','6603','财务费用') 费用类别       
     FROM bd_accasoa ac 
@@ -35,12 +42,12 @@ left join (SELECT c.code 科目编码,ac.name 科目名称,
 
 WHERE b.dr = 0 and c.code like '66%'  and b.periodv <> '00' 
 ${if(len(年度) == 0,"and 1 = 1","and b.yearv = '" + 年度 + "'")}
-group by b.yearv,b.periodv,substr(c.code, 1, 6),t.科目名称,t.费用类别
+${if(len(公司) == 0,"and 1 = 1","and orgs.name = '" + 公司 + "'")}
+group by orgs.name,b.yearv,b.periodv,substr(c.code, 1, 6),t.科目名称,t.费用类别
 )t1
-order by t1.科目编码
-]]></Query>
+order by t1.科目编码]]></Query>
 </TableData>
-<TableData name="ds2" class="com.fr.data.impl.DBTableData">
+<TableData name="ds2年度" class="com.fr.data.impl.DBTableData">
 <Parameters/>
 <Attributes maxMemRowCount="-1"/>
 <Connection class="com.fr.data.impl.NameDatabaseConnection">
@@ -53,7 +60,7 @@ order by t1.科目编码
 FROM gl_detail b
 order by b.yearv desc]]></Query>
 </TableData>
-<TableData name="ds3" class="com.fr.data.impl.DBTableData">
+<TableData name="ds3费用类别" class="com.fr.data.impl.DBTableData">
 <Parameters/>
 <Attributes maxMemRowCount="-1"/>
 <Connection class="com.fr.data.impl.NameDatabaseConnection">
@@ -62,6 +69,17 @@ order by b.yearv desc]]></Query>
 </Connection>
 <Query>
 <![CDATA[select distinct decode(substr(c.code, 1, 4),'6601','销售费用','6602','管理费用','6603','财务费用') 费用类别 from bd_account c]]></Query>
+</TableData>
+<TableData name="ds4公司" class="com.fr.data.impl.DBTableData">
+<Parameters/>
+<Attributes maxMemRowCount="-1"/>
+<Connection class="com.fr.data.impl.NameDatabaseConnection">
+<DatabaseName>
+<![CDATA[ecomtest]]></DatabaseName>
+</Connection>
+<Query>
+<![CDATA[select distinct orgs.name from gl_detail b
+left join org_orgs orgs on b.pk_org = orgs.pk_org]]></Query>
 </TableData>
 </TableDataMap>
 <Report class="com.fr.report.worksheet.WorkSheet" name="sheet1">
@@ -197,26 +215,65 @@ order by b.yearv desc]]></Query>
 <LCAttr vgap="0" hgap="0" compInterval="0"/>
 <Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
 <InnerWidget class="com.fr.form.ui.ComboBox">
+<WidgetName name="公司"/>
+<LabelName name="公司:"/>
+<WidgetAttr description="">
+<PrivilegeControl/>
+</WidgetAttr>
+<Dictionary class="com.fr.data.impl.TableDataDictionary">
+<FormulaDictAttr kiName="NAME" viName="NAME"/>
+<TableDataDictAttr>
+<TableData class="com.fr.data.impl.NameTableData">
+<Name>
+<![CDATA[ds4公司]]></Name>
+</TableData>
+</TableDataDictAttr>
+</Dictionary>
+<widgetValue>
+<O>
+<![CDATA[]]></O>
+</widgetValue>
+</InnerWidget>
+<BoundsAttr x="130" y="25" width="194" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.Label">
+<WidgetName name="Label公司"/>
+<WidgetAttr description="">
+<PrivilegeControl/>
+</WidgetAttr>
+<widgetValue>
+<O>
+<![CDATA[公司:]]></O>
+</widgetValue>
+<LabelAttr verticalcenter="true" textalign="0" autoline="true"/>
+<FRFont name="SimSun" style="0" size="72"/>
+<border style="0" color="-723724"/>
+</InnerWidget>
+<BoundsAttr x="50" y="25" width="80" height="21"/>
+</Widget>
+<Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
+<InnerWidget class="com.fr.form.ui.ComboBox">
 <WidgetName name="年度"/>
 <LabelName name="年度:"/>
 <WidgetAttr description="">
 <PrivilegeControl/>
 </WidgetAttr>
 <Dictionary class="com.fr.data.impl.TableDataDictionary">
-<FormulaDictAttr ki="0" vi="0"/>
+<FormulaDictAttr kiName="年度" viName="年度"/>
 <TableDataDictAttr>
 <TableData class="com.fr.data.impl.NameTableData">
 <Name>
-<![CDATA[ds2]]></Name>
+<![CDATA[ds2年度]]></Name>
 </TableData>
 </TableDataDictAttr>
 </Dictionary>
 <widgetValue>
-<databinding>
-<![CDATA[{}]]></databinding>
+<O>
+<![CDATA[]]></O>
 </widgetValue>
 </InnerWidget>
-<BoundsAttr x="130" y="25" width="80" height="21"/>
+<BoundsAttr x="411" y="25" width="80" height="21"/>
 </Widget>
 <Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
 <InnerWidget class="com.fr.form.ui.Label">
@@ -232,7 +289,7 @@ order by b.yearv desc]]></Query>
 <FRFont name="SimSun" style="0" size="72"/>
 <border style="0" color="-723724"/>
 </InnerWidget>
-<BoundsAttr x="50" y="25" width="80" height="21"/>
+<BoundsAttr x="331" y="25" width="80" height="21"/>
 </Widget>
 <Widget class="com.fr.form.ui.container.WAbsoluteLayout$BoundsWidget">
 <InnerWidget class="com.fr.form.parameter.FormSubmitButton">
@@ -250,6 +307,7 @@ order by b.yearv desc]]></Query>
 </Widget>
 <Sorted sorted="false"/>
 <MobileWidgetList>
+<Widget widgetName="公司"/>
 <Widget widgetName="年度"/>
 <Widget widgetName="Search"/>
 </MobileWidgetList>
@@ -260,6 +318,7 @@ order by b.yearv desc]]></Query>
 <Design_Width design_width="960"/>
 <NameTagModified/>
 <WidgetNameTagMap>
+<NameTag name="公司" tag="公司:"/>
 <NameTag name="Search" tag="年度:"/>
 <NameTag name="年度" tag="年度:"/>
 </WidgetNameTagMap>
